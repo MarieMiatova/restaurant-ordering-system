@@ -156,7 +156,7 @@ def create_order(order: OrderCreate):
         db.close()
 
 
-@app.get("/api/orders", response_model=List[OrderResponse])
+@app.get("/api/orders", response_model=list[OrderResponse])
 def get_orders():
     db = SessionLocal()
     try:
