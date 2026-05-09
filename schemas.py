@@ -3,8 +3,6 @@ from typing import Optional, List
 from datetime import datetime
 
 
-# API Contract - схемы для меню и заказов
-
 class MenuItem(BaseModel):
     id: int
     name: str
@@ -14,10 +12,16 @@ class MenuItem(BaseModel):
     image: Optional[str] = None
 
 
+class OrderItem(BaseModel):
+    menu_item_id: int
+    quantity: int
+
+
 class OrderCreate(BaseModel):
-    items: List[dict]
     customer_name: str
-    customer_phone: str
+    phone: str
+    address: str
+    items: List[OrderItem]
 
 
 class OrderStatusUpdate(BaseModel):
@@ -26,8 +30,10 @@ class OrderStatusUpdate(BaseModel):
 
 class Order(BaseModel):
     id: int
-    items: List[dict]
     customer_name: str
-    customer_phone: str
+    phone: str
+    address: str
+    items: List[OrderItem]
+    total_amount: float
     status: str
     created_at: datetime

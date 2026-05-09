@@ -1,10 +1,10 @@
-from fastapi import FastAPI
-from schemas import MenuItem
+from fastapi import FastAPI, HTTPException
+from schemas import MenuItem, OrderCreate, Order, OrderItem
+from datetime import datetime
 
 app = FastAPI()
 
 
-# Моковые данные для меню
 menu_data = [
     {
         "id": 1,
@@ -32,7 +32,45 @@ menu_data = [
     }
 ]
 
+orders_db = []
+order_counter = 0
+
 
 @app.get("/api/menu")
 def get_menu():
     return menu_data
+
+
+@app.post("/api/orders", response_model=Order)
+def create_order(order: OrderCreate):
+    global order_counter
+    
+    total = 0.0
+    for item in order.items:
+        menu_item = None
+        for m in menu_data:
+            if m["id"] == item.menu_item_id:
+                menu_item = m
+                break
+        
+        if menu_item is None:
+            raise HTTPException(status_code=400, detail=f"Menu item with id {item.menu_item_id} not found")
+        
+        total += menu_item["price"] * item.quantity
+    
+    order_counter += 1
+    
+    new_order = Order(
+        id=order_counter,
+        customer_name=order.customer_name,
+        phone=order.phone,
+        address=order.address,
+        items=order.items,
+        total_amount=total,
+        status="pending",
+        created_at=datetime.now()
+    )
+    
+    orders_db.append(new_order)
+    
+    return new_order
