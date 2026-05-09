@@ -1,8 +1,8 @@
 from fastapi import FastAPI, HTTPException
-from schemas import MenuItem, OrderCreate, Order, OrderItem
+from schemas import MenuItem, OrderCreate, Order, OrderItem, OrderResponse, OrderStatusUpdate
 from datetime import datetime
-from sqlalchemy import create_engine, Column, Integer, String, Float, DateTime, ForeignKey, Table
-from sqlalchemy.orm import sessionmaker, declarative_base, relationship
+from sqlalchemy import create_engine, Column, Integer, String, Float, DateTime, ForeignKey
+from sqlalchemy.orm import sessionmaker, declarative_base
 
 DATABASE_URL = "postgresql://postgres:postgres@localhost:5432/restaurant_db"
 
@@ -48,14 +48,6 @@ Base.metadata.create_all(bind=engine)
 app = FastAPI()
 
 
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
-
 @app.get("/api/menu")
 def get_menu():
     db = SessionLocal()
@@ -99,8 +91,17 @@ def get_menu():
 def create_order(order: OrderCreate):
     db = SessionLocal()
     try:
+        if not order.customer_name or not order.phone or not order.address:
+            raise HTTPException(status_code=400, detail="Customer name, phone and address are required")
+        
+        if not order.items or len(order.items) == 0:
+            raise HTTPException(status_code=400, detail="Order must contain at least one item")
+        
         total = 0.0
         for item in order.items:
+            if item.quantity <= 0:
+                raise HTTPException(status_code=400, detail="Quantity must be positive")
+            
             menu_item = db.query(MenuModel).filter(MenuModel.id == item.menu_item_id).first()
             
             if menu_item is None:
@@ -144,6 +145,64 @@ def create_order(order: OrderCreate):
             total_amount=new_order.total_amount,
             status=new_order.status,
             created_at=new_order.created_at
+        )
+    except HTTPException:
+        db.rollback()
+        raise
+    except Exception:
+        db.rollback()
+        raise
+    finally:
+        db.close()
+
+
+@app.get("/api/orders", response_model=List[OrderResponse])
+def get_orders():
+    db = SessionLocal()
+    try:
+        orders = db.query(OrderModel).order_by(OrderModel.created_at.desc()).all()
+        
+        result = []
+        for order in orders:
+            result.append(OrderResponse(
+                id=order.id,
+                customer_name=order.customer_name,
+                phone=order.phone,
+                address=order.address,
+                total_amount=order.total_amount,
+                status=order.status,
+                created_at=order.created_at
+            ))
+        return result
+    finally:
+        db.close()
+
+
+@app.patch("/api/orders/{order_id}/status", response_model=OrderResponse)
+def update_order_status(order_id: int, status_update: OrderStatusUpdate):
+    db = SessionLocal()
+    try:
+        order = db.query(OrderModel).filter(OrderModel.id == order_id).first()
+        
+        if order is None:
+            raise HTTPException(status_code=404, detail="Order not found")
+        
+        valid_statuses = ["pending", "confirmed", "preparing", "ready", "delivered", "cancelled"]
+        if status_update.status not in valid_statuses:
+            raise HTTPException(status_code=400, detail=f"Invalid status. Must be one of: {', '.join(valid_statuses)}")
+        
+        order.status = status_update.status
+        db.commit()
+        db.refresh(order)
+        
+        return OrderResponse(
+            id=order.id,
+            customer_name=order.customer_name,
+            phone=order.phone,
+            address=order.address,
+            total_amount=order.total_amount,
+            status=order.status,
+            created_at=order.created_at
         )
     except HTTPException:
         db.rollback()
