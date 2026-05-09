@@ -37,3 +37,13 @@ class Order(BaseModel):
     total_amount: float
     status: str
     created_at: datetime
+
+
+class OrderResponse(BaseModel):
+    id: int
+    customer_name: str
+    phone: str
+    address: str
+    total_amount: float
+    status: str
+    created_at: datetime
