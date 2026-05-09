@@ -1,14 +1,52 @@
 from fastapi import FastAPI, HTTPException
 from schemas import MenuItem, OrderCreate, Order, OrderItem, OrderResponse, OrderStatusUpdate
 from datetime import datetime
-from sqlalchemy import create_engine, Column, Integer, String, Float, DateTime, ForeignKey
+from sqlalchemy import create_engine, Column, Integer, String, Float, DateTime, ForeignKey, text
+from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import sessionmaker, declarative_base
 
-DATABASE_URL = "postgresql://postgres:postgres@localhost:5432/restaurant_db"
+DATABASE_URL = "postgresql+psycopg://postgres:postgres@127.0.0.1:5432/restaurant_db"
 
-engine = create_engine(DATABASE_URL)
+engine = create_engine(
+    DATABASE_URL,
+    pool_pre_ping=True,
+    pool_size=5,
+    max_overflow=10,
+    pool_timeout=5,
+    connect_args={"connect_timeout": 3},
+)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
+
+
+def check_db_connection():
+    try:
+        with engine.connect() as conn:
+            conn.execute(text("SELECT 1"))
+    except OperationalError as exc:
+        raise RuntimeError("Database connection failed") from exc
+
+
+app = FastAPI()
+
+
+@app.on_event("startup")
+def startup():
+    try:
+        check_db_connection()
+        Base.metadata.create_all(bind=engine)
+    except Exception as exc:
+        print(f"DB startup check failed: {exc}")
+        raise
+
+
+@app.get("/api/health")
+def health_check():
+    try:
+        check_db_connection()
+        return {"database": "ok"}
+    except Exception:
+        raise HTTPException(status_code=503, detail="Database unavailable")
 
 
 class MenuModel(Base):
@@ -83,6 +121,9 @@ def get_menu():
                 "image": item.image
             })
         return result
+    except Exception:
+        print(Exception)
+        raise HTTPException(status_code=500, detail="Error fetching menu items")
     finally:
         db.close()
 
