@@ -1,49 +1,21 @@
-```
 # Python
 __pycache__/
-*.pyc
-*.pyo
-*.pyd
-
-# Compiled and build artifacts
-*.o
-*.obj
-*.so
-*.a
-*.dll
-*.exe
-*.out
-
-# Dependencies
+*.py[cod]
+*$py.class
 .venv/
 venv/
-node_modules/
-.mypy_cache/
-.pytest_cache/
-
-# Logs and temp files
-*.log
-*.tmp
-*.swp
-*.swo
-
-# Environment
 .env
-.env.local
-!.env.example
 
-# Editors
+# Docker
+.dockerignore
+
+# IDEs
 .vscode/
 .idea/
 
-# Coverage
-coverage/
-htmlcov/
-.coverage
+# OS
+.DS_Store
 
-# Build directories
+# Frontend dependencies
+node_modules/
 dist/
-build/
-target/
-.gradle/
-```

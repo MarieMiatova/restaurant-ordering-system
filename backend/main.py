@@ -12,7 +12,6 @@ def startup():
     try:
         with engine.connect() as conn:
             conn.execute(text("SELECT 1"))
-        Base.metadata.create_all(bind=engine)
     except OperationalError as exc:
         print(f"DB startup check failed: {exc}")
         raise
