@@ -1,7 +1,14 @@
+import os
+from dotenv import load_dotenv
 from sqlalchemy import create_engine, Column, Integer, String, Float, DateTime, ForeignKey
 from sqlalchemy.orm import sessionmaker, declarative_base
 
-DATABASE_URL = "postgresql+psycopg://postgres:postgres@127.0.0.1:5432/restaurant_db"
+load_dotenv()
+
+DATABASE_URL = os.getenv("DATABASE_URL")
+
+if not DATABASE_URL:
+    raise ValueError("DATABASE_URL not found in environment variables")
 
 engine = create_engine(
     DATABASE_URL,
