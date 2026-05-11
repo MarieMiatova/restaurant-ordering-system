@@ -1,8 +1,9 @@
 from fastapi import FastAPI, HTTPException
 from sqlalchemy import text
 from sqlalchemy.exc import OperationalError
-from backend.models import engine, Base
-from backend.routers import menu, orders
+
+from backend.models import engine
+from backend.routers import auth, menu, orders
 
 app = FastAPI()
 
@@ -26,9 +27,10 @@ def health_check():
         with engine.connect() as conn:
             conn.execute(text("SELECT 1"))
         return {"database": "ok"}
-    except Exception:
-        raise HTTPException(status_code=503, detail="Database unavailable")
+    except Exception as exc:
+        raise HTTPException(status_code=503, detail="Database unavailable") from exc
 
 
 app.include_router(menu.router, prefix="/api", tags=["Menu"])
 app.include_router(orders.router, prefix="/api", tags=["Orders"])
+app.include_router(auth.router, prefix="/api/auth", tags=["Auth"])

@@ -1,21 +1,52 @@
+```
+# Environment variables
+.env
+.env.local
+.env.*
+
+# Database files
+*.db
+test.db
+backend/test.db
+
 # Python
 __pycache__/
-*.py[cod]
-*$py.class
-.venv/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
 venv/
-.env
+.venv/
+.venv.bak/
+pip-log.txt
+pip-delete-this-directory.txt
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.log
+*.pot
+*.po
+*~
+.pytest_cache/
+.hypothesis/
 
-# Docker
-.dockerignore
+# Testing
+.pytest_cache/
+.coverage
 
-# IDEs
+# IDE
 .vscode/
 .idea/
+*.swp
+*.swo
+*.tmp
 
 # OS
 .DS_Store
-
-# Frontend dependencies
-node_modules/
-dist/
+Thumbs.db
+```.env
