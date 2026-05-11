@@ -12,9 +12,17 @@ from backend.models import UserModel
 
 load_dotenv()
 
-SECRET_KEY = os.getenv("SECRET_KEY", "your-secret-key-change-in-production")
+SECRET_KEY = os.getenv("SECRET_KEY")
+if not SECRET_KEY:
+    # During development/testing we might want a fallback, 
+    # but for production it MUST be set.
+    if os.getenv("ENV") == "production":
+        raise RuntimeError("SECRET_KEY environment variable is not set!")
+    SECRET_KEY = "dev-secret-key-replace-me"
+
 ALGORITHM = os.getenv("ALGORITHM", "HS256")
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "30"))
+
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")

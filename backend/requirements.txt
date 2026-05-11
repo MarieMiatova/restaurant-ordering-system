@@ -5,3 +5,11 @@ sqlalchemy==2.0.25
 psycopg[binary]==3.2.10
 python-dotenv==1.0.1
 alembic==1.13.1
+
+# Auth & Security
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+
+# Testing
+pytest==8.0.0
+httpx==0.26.0
