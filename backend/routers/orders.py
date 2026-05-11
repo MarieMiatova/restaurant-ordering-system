@@ -1,8 +1,10 @@
+from datetime import datetime
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from datetime import datetime
-from backend.models import MenuModel, OrderModel, OrderItemModel, get_db
-from backend.schemas import OrderCreate, Order, OrderResponse, OrderStatusUpdate, OrderItem
+
+from backend.models import MenuModel, OrderItemModel, OrderModel, get_db
+from backend.schemas import Order, OrderCreate, OrderItem, OrderResponse, OrderStatusUpdate
 
 router = APIRouter()
 
@@ -23,7 +25,10 @@ def create_order(order: OrderCreate, db: Session = Depends(get_db)):
         menu_item = db.query(MenuModel).filter(MenuModel.id == item.menu_item_id).first()
         
         if menu_item is None:
-            raise HTTPException(status_code=400, detail=f"Menu item with id {item.menu_item_id} not found")
+            raise HTTPException(
+                status_code=400,
+                detail=f"Menu item with id {item.menu_item_id} not found",
+            )
         
         total += menu_item.price * item.quantity
     
@@ -85,15 +90,29 @@ def get_orders(db: Session = Depends(get_db)):
 
 
 @router.patch("/orders/{order_id}/status", response_model=OrderResponse)
-def update_order_status(order_id: int, status_update: OrderStatusUpdate, db: Session = Depends(get_db)):
+def update_order_status(
+    order_id: int,
+    status_update: OrderStatusUpdate,
+    db: Session = Depends(get_db),
+):
     order = db.query(OrderModel).filter(OrderModel.id == order_id).first()
     
     if order is None:
         raise HTTPException(status_code=404, detail="Order not found")
     
-    valid_statuses = ["pending", "confirmed", "preparing", "ready", "delivered", "cancelled"]
+    valid_statuses = [
+        "pending",
+        "confirmed",
+        "preparing",
+        "ready",
+        "delivered",
+        "cancelled",
+    ]
     if status_update.status not in valid_statuses:
-        raise HTTPException(status_code=400, detail=f"Invalid status. Must be one of: {', '.join(valid_statuses)}")
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid status. Must be one of: {', '.join(valid_statuses)}",
+        )
     
     order.status = status_update.status
     db.commit()
