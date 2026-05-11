@@ -26,8 +26,10 @@ class MenuItem(BaseModel):
     name: str
     description: str
     price: float
-    category: Optional[str] = None
+    categories: List[Category] = []
     image: Optional[str] = None
+    
+    model_config = {"from_attributes": True}
     
     @field_validator("price")
     @classmethod

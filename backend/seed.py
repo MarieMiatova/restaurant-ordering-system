@@ -21,9 +21,10 @@ def seed_data():
         # 2. Seed Admin User
         admin_user = db.query(UserModel).filter(UserModel.username == "admin").first()
         if not admin_user:
+            admin_password = os.getenv("ADMIN_PASSWORD", "admin12345")
             admin_user = UserModel(
                 username="admin",
-                hashed_password=get_password_hash("admin12345"),
+                hashed_password=get_password_hash(admin_password),
                 role="admin"
             )
             db.add(admin_user)
@@ -134,6 +135,32 @@ def seed_data():
                     "price": 320, 
                     "img": "russian_medovik_honey_cake.png", 
                     "desc": "Классический рецепт."
+                }
+            ],
+            "Напитки": [
+                {
+                    "name": "Морс Клюквенный", 
+                    "price": 150, 
+                    "img": "russian_cranberry_mors.png", 
+                    "desc": "Домашний морс из свежей клюквы."
+                },
+                {
+                    "name": "Квас Домашний", 
+                    "price": 120, 
+                    "img": "russian_kvass.png", 
+                    "desc": "Традиционный хлебный квас."
+                },
+                {
+                    "name": "Компот", 
+                    "price": 130, 
+                    "img": "russian_kompot.png", 
+                    "desc": "Из сухофруктов, как в детстве."
+                },
+                {
+                    "name": "Чай с чабрецом", 
+                    "price": 200, 
+                    "img": "russian_tea_with_thyme.png", 
+                    "desc": "Черный чай с лесным чабрецом."
                 }
             ]
         }
