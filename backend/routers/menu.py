@@ -101,7 +101,7 @@ def get_menu(
     query = db.query(MenuModel)
     
     if category:
-        query = query.filter(MenuModel.category == category)
+        query = query.filter(MenuModel.categories.any(CategoryModel.name == category))
     
     if search:
         search_term = f"%{search}%"
