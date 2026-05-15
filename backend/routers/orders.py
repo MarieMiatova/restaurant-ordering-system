@@ -13,23 +13,17 @@ router = APIRouter()
 @router.post("/orders", response_model=Order)
 def create_order(order: OrderCreate, db: Session = Depends(get_db)):
     if not order.customer_name or not order.phone or not order.address:
-        raise HTTPException(
-            status_code=400,
-            detail="Customer name, phone and address are required")
+        raise HTTPException(status_code=400, detail="Customer name, phone and address are required")
 
     if not order.items or len(order.items) == 0:
-        raise HTTPException(status_code=400,
-                            detail="Order must contain at least one item")
+        raise HTTPException(status_code=400, detail="Order must contain at least one item")
 
     total = 0.0
     for item in order.items:
         if item.quantity <= 0:
-            raise HTTPException(
-                status_code=400,
-                detail="Quantity must be positive")
+            raise HTTPException(status_code=400, detail="Quantity must be positive")
 
-        menu_item = db.query(MenuModel).filter(
-            MenuModel.id == item.menu_item_id).first()
+        menu_item = db.query(MenuModel).filter(MenuModel.id == item.menu_item_id).first()
 
         if menu_item is None:
             raise HTTPException(
@@ -45,7 +39,7 @@ def create_order(order: OrderCreate, db: Session = Depends(get_db)):
         address=order.address,
         total_amount=total,
         status="pending",
-        created_at=datetime.now()
+        created_at=datetime.now(),
     )
 
     db.add(new_order)
@@ -54,9 +48,7 @@ def create_order(order: OrderCreate, db: Session = Depends(get_db)):
 
     for item in order.items:
         order_item = OrderItemModel(
-            order_id=new_order.id,
-            menu_item_id=item.menu_item_id,
-            quantity=item.quantity
+            order_id=new_order.id, menu_item_id=item.menu_item_id, quantity=item.quantity
         )
         db.add(order_item)
 
@@ -64,10 +56,7 @@ def create_order(order: OrderCreate, db: Session = Depends(get_db)):
 
     order_items = []
     for item in order.items:
-        order_items.append(
-            OrderItem(
-                menu_item_id=item.menu_item_id,
-                quantity=item.quantity))
+        order_items.append(OrderItem(menu_item_id=item.menu_item_id, quantity=item.quantity))
 
     return Order(
         id=new_order.id,
@@ -77,7 +66,7 @@ def create_order(order: OrderCreate, db: Session = Depends(get_db)):
         items=order_items,
         total_amount=new_order.total_amount,
         status=new_order.status,
-        created_at=new_order.created_at
+        created_at=new_order.created_at,
     )
 
 
@@ -87,8 +76,7 @@ def create_order_from_cart(
     db: Session = Depends(get_db),
     current_user: UserModel = Depends(get_current_user),
 ):
-    cart_items = db.query(CartItemModel).filter(
-        CartItemModel.user_id == current_user.id).all()
+    cart_items = db.query(CartItemModel).filter(CartItemModel.user_id == current_user.id).all()
 
     if not cart_items:
         raise HTTPException(status_code=400, detail="Cart is empty")
@@ -97,8 +85,7 @@ def create_order_from_cart(
     order_items_data = []
 
     for cart_item in cart_items:
-        menu_item = db.query(MenuModel).filter(
-            MenuModel.id == cart_item.menu_item_id).first()
+        menu_item = db.query(MenuModel).filter(MenuModel.id == cart_item.menu_item_id).first()
 
         if menu_item is None:
             raise HTTPException(
@@ -108,7 +95,8 @@ def create_order_from_cart(
 
         total += menu_item.price * cart_item.quantity
         order_items_data.append(
-            {"menu_item_id": cart_item.menu_item_id, "quantity": cart_item.quantity})
+            {"menu_item_id": cart_item.menu_item_id, "quantity": cart_item.quantity}
+        )
 
     new_order = OrderModel(
         customer_name=order_data.customer_name,
@@ -116,7 +104,7 @@ def create_order_from_cart(
         address=order_data.address,
         total_amount=total,
         status="pending",
-        created_at=datetime.now()
+        created_at=datetime.now(),
     )
 
     db.add(new_order)
@@ -127,14 +115,13 @@ def create_order_from_cart(
         order_item = OrderItemModel(
             order_id=new_order.id,
             menu_item_id=item_data["menu_item_id"],
-            quantity=item_data["quantity"]
+            quantity=item_data["quantity"],
         )
         db.add(order_item)
 
     db.commit()
 
-    db.query(CartItemModel).filter(
-        CartItemModel.user_id == current_user.id).delete()
+    db.query(CartItemModel).filter(CartItemModel.user_id == current_user.id).delete()
     db.commit()
 
     order_items = [OrderItem(**item) for item in order_items_data]
@@ -147,7 +134,7 @@ def create_order_from_cart(
         items=order_items,
         total_amount=new_order.total_amount,
         status=new_order.status,
-        created_at=new_order.created_at
+        created_at=new_order.created_at,
     )
 
 
@@ -157,15 +144,17 @@ def get_orders(db: Session = Depends(get_db)):
 
     result = []
     for order in orders:
-        result.append(OrderResponse(
-            id=order.id,
-            customer_name=order.customer_name,
-            phone=order.phone,
-            address=order.address,
-            total_amount=order.total_amount,
-            status=order.status,
-            created_at=order.created_at
-        ))
+        result.append(
+            OrderResponse(
+                id=order.id,
+                customer_name=order.customer_name,
+                phone=order.phone,
+                address=order.address,
+                total_amount=order.total_amount,
+                status=order.status,
+                created_at=order.created_at,
+            )
+        )
     return result
 
 
@@ -192,8 +181,7 @@ def update_order_status(
     if status_update.status not in valid_statuses:
         raise HTTPException(
             status_code=400,
-            detail=f"Invalid status. Must be one of: {
-                ', '.join(valid_statuses)}",
+            detail=f"Invalid status. Must be one of: {', '.join(valid_statuses)}",
         )
 
     order.status = status_update.status
@@ -207,5 +195,5 @@ def update_order_status(
         address=order.address,
         total_amount=order.total_amount,
         status=order.status,
-        created_at=order.created_at
+        created_at=order.created_at,
     )

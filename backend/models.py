@@ -34,16 +34,8 @@ def get_db():
 menu_categories = Table(
     "menu_categories",
     Base.metadata,
-    Column(
-        "menu_id",
-        Integer,
-        ForeignKey("menu.id"),
-        primary_key=True),
-    Column(
-        "category_id",
-        Integer,
-        ForeignKey("categories.id"),
-        primary_key=True),
+    Column("menu_id", Integer, ForeignKey("menu.id"), primary_key=True),
+    Column("category_id", Integer, ForeignKey("categories.id"), primary_key=True),
 )
 
 
@@ -54,10 +46,7 @@ class CategoryModel(Base):
     name = Column(String, unique=True, index=True, nullable=False)
     description = Column(String, nullable=True)
 
-    menu_items = relationship(
-        "MenuModel",
-        secondary=menu_categories,
-        back_populates="categories")
+    menu_items = relationship("MenuModel", secondary=menu_categories, back_populates="categories")
 
 
 class MenuModel(Base):
@@ -70,7 +59,6 @@ class MenuModel(Base):
     image = Column(String, nullable=True)
 
     categories = relationship(
-
         "CategoryModel", secondary=menu_categories, back_populates="menu_items"
     )
 

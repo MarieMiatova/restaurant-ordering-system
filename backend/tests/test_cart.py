@@ -1,5 +1,6 @@
-from fastapi.testclient import TestClient
 from unittest.mock import MagicMock
+
+from fastapi.testclient import TestClient
 
 
 class TestCartEndpoints:
@@ -25,10 +26,7 @@ class TestCartEndpoints:
         response = client_mock.delete("/api/cart")
         assert response.status_code == 401
 
-    def test_get_cart_authorized(
-            self,
-            client_mock: TestClient,
-            mock_db_session):
+    def test_get_cart_authorized(self, client_mock: TestClient, mock_db_session):
         from backend.auth import get_password_hash
 
         unique_username = "testuser_cart"
@@ -42,8 +40,7 @@ class TestCartEndpoints:
         mock_db_session.query.return_value.filter.return_value.all.return_value = []
 
         login_payload = {"username": unique_username, "password": "testpass"}
-        login_response = client_mock.post(
-            "/api/auth/login", json=login_payload)
+        login_response = client_mock.post("/api/auth/login", json=login_payload)
         assert login_response.status_code == 200
         token = login_response.json()["access_token"]
 
@@ -52,10 +49,7 @@ class TestCartEndpoints:
         assert response.status_code == 200
         assert isinstance(response.json(), list)
 
-    def test_add_to_cart_authorized(
-            self,
-            client_mock: TestClient,
-            mock_db_session):
+    def test_add_to_cart_authorized(self, client_mock: TestClient, mock_db_session):
         from backend.auth import get_password_hash
 
         unique_username = "testuser_cart_add"
@@ -77,11 +71,10 @@ class TestCartEndpoints:
             item.id = 1
 
         mock_db_session.add.side_effect = add_side_effect
-        mock_db_session.refresh.side_effect = lambda x: setattr(x, 'id', 1)
+        mock_db_session.refresh.side_effect = lambda x: setattr(x, "id", 1)
 
         login_payload = {"username": unique_username, "password": "testpass"}
-        login_response = client_mock.post(
-            "/api/auth/login", json=login_payload)
+        login_response = client_mock.post("/api/auth/login", json=login_payload)
         token = login_response.json()["access_token"]
 
         headers = {"Authorization": f"Bearer {token}"}
@@ -89,8 +82,7 @@ class TestCartEndpoints:
         response = client_mock.post("/api/cart", json=payload, headers=headers)
         assert response.status_code == 201
 
-    def test_cart_operations_full_flow(
-            self, client_mock: TestClient, mock_db_session):
+    def test_cart_operations_full_flow(self, client_mock: TestClient, mock_db_session):
         from backend.auth import get_password_hash
 
         unique_username = "testuser_cart_flow"
@@ -108,12 +100,10 @@ class TestCartEndpoints:
         cart_item.menu_item_id = 1
         cart_item.quantity = 2
 
-        mock_db_session.query.return_value.filter.return_value.all.return_value = [
-            cart_item]
+        mock_db_session.query.return_value.filter.return_value.all.return_value = [cart_item]
 
         login_payload = {"username": unique_username, "password": "testpass"}
-        login_response = client_mock.post(
-            "/api/auth/login", json=login_payload)
+        login_response = client_mock.post("/api/auth/login", json=login_payload)
         token = login_response.json()["access_token"]
 
         headers = {"Authorization": f"Bearer {token}"}
@@ -122,10 +112,7 @@ class TestCartEndpoints:
         assert response.status_code == 200
 
         update_payload = {"quantity": 5}
-        response = client_mock.put(
-            "/api/cart/1",
-            json=update_payload,
-            headers=headers)
+        response = client_mock.put("/api/cart/1", json=update_payload, headers=headers)
         assert response.status_code in [200, 404]
 
         response = client_mock.delete("/api/cart/1", headers=headers)

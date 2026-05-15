@@ -20,8 +20,8 @@ def client_mock(mock_db_session):
         finally:
             pass
 
-    with patch('backend.main.engine'):
-        with patch('backend.models.SessionLocal', return_value=mock_db_session):
+    with patch("backend.main.engine"):
+        with patch("backend.models.SessionLocal", return_value=mock_db_session):
             from backend.main import app
             from backend.models import get_db
 
@@ -51,7 +51,7 @@ class TestMenuEndpoints:
             "name": "New Item",
             "description": "New Description",
             "price": 200.0,
-            "category": "New"
+            "category": "New",
         }
         response = client_mock.post("/api/menu", json=payload)
         assert response.status_code == 401
@@ -85,25 +85,20 @@ class TestCategoryEndpoints:
 class TestAuthEndpoints:
     def test_register_user(self, client_mock: TestClient, mock_db_session):
         import uuid
+
         unique_username = f"testuser_{uuid.uuid4().hex[:8]}"
 
         mock_db_session.query.return_value.filter.return_value.first.return_value = None
 
-        payload = {
-            "username": unique_username,
-            "password": "securepass123",
-            "role": "user"
-        }
+        payload = {"username": unique_username, "password": "securepass123", "role": "user"}
         response = client_mock.post("/api/auth/register", json=payload)
         assert response.status_code == 200
         data = response.json()
         assert data["username"] == unique_username
 
-    def test_register_duplicate_user(
-            self,
-            client_mock: TestClient,
-            mock_db_session):
+    def test_register_duplicate_user(self, client_mock: TestClient, mock_db_session):
         import uuid
+
         unique_username = f"testuser_{uuid.uuid4().hex[:8]}"
 
         mock_user = MagicMock()
@@ -111,25 +106,23 @@ class TestAuthEndpoints:
 
         def query_side_effect(model):
             filter_mock = MagicMock()
-            if model.__name__ == 'UserModel':
+            if model.__name__ == "UserModel":
                 filter_mock.first.return_value = mock_user
             return filter_mock
 
         mock_db_session.query.side_effect = query_side_effect
 
-        payload = {
-            "username": unique_username,
-            "password": "securepass123",
-            "role": "user"
-        }
+        payload = {"username": unique_username, "password": "securepass123", "role": "user"}
         response = client_mock.post("/api/auth/register", json=payload)
         assert response.status_code == 400
 
     def test_login_success(self, client_mock: TestClient, mock_db_session):
         import uuid
+
         unique_username = f"testuser_{uuid.uuid4().hex[:8]}"
 
         from backend.auth import get_password_hash
+
         mock_user = MagicMock()
         mock_user.username = unique_username
         mock_user.hashed_password = get_password_hash("testpass")
@@ -144,14 +137,13 @@ class TestAuthEndpoints:
         assert "access_token" in data
         assert data["token_type"] == "bearer"
 
-    def test_login_wrong_password(
-            self,
-            client_mock: TestClient,
-            mock_db_session):
+    def test_login_wrong_password(self, client_mock: TestClient, mock_db_session):
         import uuid
+
         unique_username = f"testuser_{uuid.uuid4().hex[:8]}"
 
         from backend.auth import get_password_hash
+
         mock_user = MagicMock()
         mock_user.username = unique_username
         mock_user.hashed_password = get_password_hash("testpass")
@@ -162,10 +154,7 @@ class TestAuthEndpoints:
         response = client_mock.post("/api/auth/login", json=payload)
         assert response.status_code == 401
 
-    def test_login_nonexistent_user(
-            self,
-            client_mock: TestClient,
-            mock_db_session):
+    def test_login_nonexistent_user(self, client_mock: TestClient, mock_db_session):
         mock_db_session.query.return_value.filter.return_value.first.return_value = None
 
         payload = {"username": "nouser", "password": "anypass"}
@@ -179,7 +168,7 @@ class TestOrderEndpoints:
             "customer_name": "John Doe",
             "phone": "123",
             "address": "123 Main St",
-            "items": [{"menu_item_id": 1, "quantity": 1}]
+            "items": [{"menu_item_id": 1, "quantity": 1}],
         }
         response = client_mock.post("/api/orders", json=payload)
         assert response.status_code == 422

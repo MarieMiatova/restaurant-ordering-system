@@ -23,8 +23,7 @@ def get_categories(db: Session = Depends(get_db)):
 
 @router.get("/categories/{category_id}", response_model=Category)
 def get_category(category_id: int, db: Session = Depends(get_db)):
-    category = db.query(CategoryModel).filter(
-        CategoryModel.id == category_id).first()
+    category = db.query(CategoryModel).filter(CategoryModel.id == category_id).first()
     if category is None:
         raise HTTPException(status_code=404, detail="Category not found")
     return category
@@ -36,16 +35,11 @@ def create_category(
     db: Session = Depends(get_db),
     admin_user: UserModel = Depends(require_admin),
 ):
-    existing = db.query(CategoryModel).filter(
-        CategoryModel.name == category.name).first()
+    existing = db.query(CategoryModel).filter(CategoryModel.name == category.name).first()
     if existing:
-        raise HTTPException(status_code=400,
-                            detail="Category with this name already exists")
+        raise HTTPException(status_code=400, detail="Category with this name already exists")
 
-    db_category = CategoryModel(
-        name=category.name,
-        description=category.description
-    )
+    db_category = CategoryModel(name=category.name, description=category.description)
     db.add(db_category)
     db.commit()
     db.refresh(db_category)
@@ -59,20 +53,18 @@ def update_category(
     db: Session = Depends(get_db),
     admin_user: UserModel = Depends(require_admin),
 ):
-    db_category = db.query(CategoryModel).filter(
-        CategoryModel.id == category_id).first()
+    db_category = db.query(CategoryModel).filter(CategoryModel.id == category_id).first()
     if db_category is None:
         raise HTTPException(status_code=404, detail="Category not found")
 
     if category_update.name is not None:
-        existing = db.query(CategoryModel).filter(
-            CategoryModel.name == category_update.name,
-            CategoryModel.id != category_id
-        ).first()
+        existing = (
+            db.query(CategoryModel)
+            .filter(CategoryModel.name == category_update.name, CategoryModel.id != category_id)
+            .first()
+        )
         if existing:
-            raise HTTPException(
-                status_code=400,
-                detail="Category with this name already exists")
+            raise HTTPException(status_code=400, detail="Category with this name already exists")
         db_category.name = category_update.name
 
     if category_update.description is not None:
@@ -89,8 +81,7 @@ def delete_category(
     db: Session = Depends(get_db),
     admin_user: UserModel = Depends(require_admin),
 ):
-    db_category = db.query(CategoryModel).filter(
-        CategoryModel.id == category_id).first()
+    db_category = db.query(CategoryModel).filter(CategoryModel.id == category_id).first()
     if db_category is None:
         raise HTTPException(status_code=404, detail="Category not found")
 
@@ -100,23 +91,16 @@ def delete_category(
 
 
 @router.get("/menu", response_model=list[MenuItem])
-def get_menu(
-    category: str = None,
-    search: str = None,
-    db: Session = Depends(get_db)
-):
+def get_menu(category: str = None, search: str = None, db: Session = Depends(get_db)):
     query = db.query(MenuModel)
 
     if category:
-        query = query.filter(
-            MenuModel.categories.any(
-                CategoryModel.name == category))
+        query = query.filter(MenuModel.categories.any(CategoryModel.name == category))
 
     if search:
         search_term = f"%{search}%"
         query = query.filter(
-            (MenuModel.name.ilike(search_term)) |
-            (MenuModel.description.ilike(search_term))
+            (MenuModel.name.ilike(search_term)) | (MenuModel.description.ilike(search_term))
         )
 
     items = query.all()
@@ -138,10 +122,7 @@ def create_menu_item(
     admin_user: UserModel = Depends(require_admin),
 ):
     db_item = MenuModel(
-        name=item.name,
-        description=item.description,
-        price=item.price,
-        image=item.image
+        name=item.name, description=item.description, price=item.price, image=item.image
     )
 
     db.add(db_item)
@@ -149,8 +130,7 @@ def create_menu_item(
     db.refresh(db_item)
 
     if item.category_ids:
-        categories = db.query(CategoryModel).filter(
-            CategoryModel.id.in_(item.category_ids)).all()
+        categories = db.query(CategoryModel).filter(CategoryModel.id.in_(item.category_ids)).all()
         db_item.categories = categories
         db.commit()
         db.refresh(db_item)
@@ -179,9 +159,9 @@ def update_menu_item(
         db_item.image = item_update.image
 
     if item_update.category_ids is not None:
-        categories = db.query(CategoryModel).filter(
-            CategoryModel.id.in_(item_update.category_ids)
-        ).all()
+        categories = (
+            db.query(CategoryModel).filter(CategoryModel.id.in_(item_update.category_ids)).all()
+        )
         db_item.categories = categories
 
     db.commit()

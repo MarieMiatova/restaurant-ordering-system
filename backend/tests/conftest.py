@@ -20,8 +20,8 @@ def client_mock(mock_db_session):
         finally:
             pass
 
-    with patch('backend.main.engine'):
-        with patch('backend.models.SessionLocal', return_value=mock_db_session):
+    with patch("backend.main.engine"):
+        with patch("backend.models.SessionLocal", return_value=mock_db_session):
             from backend.main import app
             from backend.models import get_db
 
